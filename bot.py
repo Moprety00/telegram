@@ -21,7 +21,7 @@ threading.Thread(target=run_dummy_server, daemon=True).start()
 # НАСТРОЙКИ БОТА
 # ========================
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-TOKEN = '8757257581:AAGyOvdsgdqv-Ko3ZTQ-rTfBH8QLisIwkGs'
+TOKEN = '8757257581:AAGQ3m4j-TOfX8ec-_XdB9mQ9pcrP6L_cCM'
 bot = telebot.TeleBot(TOKEN)
 
 lobbies = {}
