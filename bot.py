@@ -335,6 +335,12 @@ def start_distribution(lobby_id):
         track_msg(lobby_id, msg2)
 
 if __name__ == '__main__':
-    bot.remove_webhook()
-    print("Чудо Оолаха запущен!")
-    bot.polling(none_stop=True, skip_pending=True)
+    try:
+        # Принудительно очищаем вебхуки перед стартом
+        bot.remove_webhook()
+        # Добавляем flush=True, чтобы логи сразу летели в Render
+        print("Чудо Оолаха готов к работе! Поллинг запущен...", flush=True)
+        # Запускаем бесконечный опрос
+        bot.infinity_polling(timeout=10, long_polling_timeout=5)
+    except Exception as e:
+        print(f"Критическая ошибка при запуске: {e}", flush=True)
