@@ -45,10 +45,10 @@ MC_BASICS = [
     "Магмовый куб", "Пещерный паук", "Чешуйница", "Зомби-житель", "Утопленник", 
     "Бродяга", "Кадавр", "Свинозомби", "Скелет-иссушитель", "Лама", "Белый медведь", 
     "Летучая мышь", "Страйдер", "Шалкер", "Страж", "Вредина", "Хранитель (Варден)", 
-    "Лягушка", "Верблюд", "Нюхач", "Бриз", "Осёл", "Мул",
+    "Лягушка", "Головастик", "Аллай", "Верблюд", "Нюхач", "Бриз", "Осёл", "Мул", "Эндермит"
 ]
 
-# 2. Майнкрафт (Вообще все) - Полный список
+# 2. Майнкрафт (Вообще все)
 MC_ALL = sorted(list(set(MC_BASICS + [
     "Древний страж", "Зоглин", "Пиглин-дикарь", "Надзиратель", "Броненосец", 
     "Странствующий торговец", "Лама торговца", "Светящийся кальмар", 
@@ -75,7 +75,6 @@ HUMOR = [
     "Шиза", "Даун", "Таракан", "Монгол", "Бырга", "67", "Гуль", "Пов: ты шпион", 
     "Анальная трешина", "свинина", "Харамная свинья"
 ]
-
 THEMES = {
     "🌱 Майнкрафт (основы)": MC_BASICS,
     "💀 Майнкрафт (вообще все)": MC_ALL,
@@ -91,8 +90,10 @@ THEME_KEYS = list(THEMES.keys())
 # ЛОГИКА
 # ========================
 def safe_delete(chat_id, message_id):
-    try: bot.delete_message(chat_id, message_id)
-    except: pass
+    try:
+        bot.delete_message(chat_id, message_id)
+    except:
+        pass
 
 def track_msg(lobby_id, msg):
     if msg and lobby_id in lobbies:
@@ -100,7 +101,8 @@ def track_msg(lobby_id, msg):
 
 def clear_lobby_messages(lobby_id):
     if lobby_id not in lobbies: return
-    for cid, mid in lobbies[lobby_id].get('msgs', []): safe_delete(cid, mid)
+    for cid, mid in lobbies[lobby_id].get('msgs', []):
+        safe_delete(cid, mid)
     lobbies[lobby_id]['msgs'] = []
 
 def track_system_msg(lobby_id, msg):
@@ -109,12 +111,14 @@ def track_system_msg(lobby_id, msg):
 
 def clear_system_messages(lobby_id):
     if lobby_id not in lobbies: return
-    for cid, mid in lobbies[lobby_id].get('system_msgs', []): safe_delete(cid, mid)
+    for cid, mid in lobbies[lobby_id].get('system_msgs', []):
+        safe_delete(cid, mid)
     lobbies[lobby_id]['system_msgs'] = []
 
 def get_real_lobby(user_id):
     lid = user_lobbies.get(user_id)
-    if lid and lid in lobbies: return lid
+    if lid and lid in lobbies:
+        return lid
     return None
 
 def dissolve_lobby(lobby_id):
@@ -159,7 +163,7 @@ def cmd_start(message):
     offline_games.pop(uid, None)
     start_kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
     start_kb.add(types.KeyboardButton("/start"))
-    bot.send_message(message.chat.id, "⬇️ Кнопка старта всегда под рукой", reply_markup=start_kb)
+    bot.send_message(message.chat.id, "⬇️ Меню активно", reply_markup=start_kb)
     bot.send_message(message.chat.id, "🎭 *Добро пожаловать в Чудо Оолаха!*", parse_mode="Markdown", reply_markup=kb_main())
 
 @bot.message_handler(func=lambda m: user_states.get(m.from_user.id) != 'entering_code' and not m.text.startswith('/'))
@@ -184,27 +188,36 @@ def handle_code(message):
                 clear_system_messages(code)
                 clear_lobby_messages(code)
                 start_distribution(code)
-        else: bot.send_message(message.chat.id, "❌ Лобби заполнено!")
-    else: bot.send_message(message.chat.id, "❌ Неверный код!")
+        else:
+            bot.send_message(message.chat.id, "❌ Мест нет!")
+    else:
+        bot.send_message(message.chat.id, "❌ Код не найден!")
 
 # ========================
-# ОБРАБОТКА КНОПОК
+# CALLBACKS
 # ========================
 @bot.callback_query_handler(func=lambda call: True)
 def handle_cb(call):
-    chat_id, uid, mid, data = call.message.chat.id, call.from_user.id, call.message.message_id, call.data
-    try: bot.answer_callback_query(call.id)
-    except: pass
+    chat_id = call.message.chat.id
+    uid = call.from_user.id
+    mid = call.message.message_id
+    data = call.data
+    try:
+        bot.answer_callback_query(call.id)
+    except:
+        pass
 
     if data == "go_main":
-        offline_games.pop(uid, None); lid = get_real_lobby(uid)
-        if lid: dissolve_lobby(lid)
+        offline_games.pop(uid, None)
+        lid = get_real_lobby(uid)
+        if lid:
+            dissolve_lobby(lid)
         safe_delete(chat_id, mid)
-        bot.send_message(chat_id, "🎭 *Чудо Оолаха*", parse_mode="Markdown", reply_markup=kb_main())
+        bot.send_message(chat_id, "🎭 *Главное меню*", parse_mode="Markdown", reply_markup=kb_main())
 
     elif data == "online_mode":
         safe_delete(chat_id, mid)
-        bot.send_message(chat_id, "🌐 *Онлайн режим*", parse_mode="Markdown", reply_markup=kb_online_menu())
+        bot.send_message(chat_id, "🌐 *Онлайн*", parse_mode="Markdown", reply_markup=kb_online_menu())
 
     elif data == "create_game":
         lid = str(random.randint(100000, 999999))
@@ -213,63 +226,79 @@ def handle_cb(call):
         safe_delete(chat_id, mid)
         m = types.InlineKeyboardMarkup(row_width=4)
         m.add(*[types.InlineKeyboardButton(str(i), callback_data=f"set_p_{i}") for i in range(3, 11)])
-        msg = bot.send_message(chat_id, f"🎲 *Комната `{lid}`*\n\n1️⃣ Сколько игроков?", parse_mode="Markdown", reply_markup=m)
+        msg = bot.send_message(chat_id, f"🎲 *Лобби `{lid}`*\n\n1️⃣ Сколько игроков?", parse_mode="Markdown", reply_markup=m)
         track_msg(lid, msg)
 
     elif data.startswith("set_p_"):
-        n = int(data.split("_")[2]); lid = get_real_lobby(uid)
+        n = int(data.split("_")[2])
+        lid = get_real_lobby(uid)
         if lid:
             lobbies[lid]['settings']['players_count'] = n
             safe_delete(chat_id, mid)
             m = types.InlineKeyboardMarkup(row_width=3)
             m.add(*[types.InlineKeyboardButton(str(i), callback_data=f"set_s_{i}") for i in range(1, min(n, 5))])
-            msg = bot.send_message(chat_id, "2️⃣ Сколько шпионов?", reply_markup=m); track_msg(lid, msg)
+            msg = bot.send_message(chat_id, "2️⃣ Сколько шпионов?", reply_markup=m)
+            track_msg(lid, msg)
 
     elif data.startswith("set_s_"):
-        n = int(data.split("_")[2]); lid = get_real_lobby(uid)
+        n = int(data.split("_")[2])
+        lid = get_real_lobby(uid)
         if lid:
             lobbies[lid]['settings']['spies_count'] = n
             safe_delete(chat_id, mid)
             m = types.InlineKeyboardMarkup()
             for i, t in enumerate(THEME_KEYS): m.add(types.InlineKeyboardButton(t, callback_data=f"set_t_{i}"))
-            msg = bot.send_message(chat_id, "3️⃣ Выбери тему:", reply_markup=m); track_msg(lid, msg)
+            msg = bot.send_message(chat_id, "3️⃣ Тема:", reply_markup=m)
+            track_msg(lid, msg)
 
     elif data.startswith("set_t_"):
-        idx = int(data.split("_")[2]); lid = get_real_lobby(uid)
+        idx = int(data.split("_")[2])
+        lid = get_real_lobby(uid)
         if lid:
             lobbies[lid]['settings']['theme'] = THEME_KEYS[idx]
             safe_delete(chat_id, mid)
-            m = types.InlineKeyboardMarkup(); m.add(types.InlineKeyboardButton("❌ Отмена", callback_data="cancel_lobby"))
-            msg = bot.send_message(chat_id, f"✅ *Лобби `{lid}` готово!*\nОжидание игроков...", parse_mode="Markdown", reply_markup=m)
+            m = types.InlineKeyboardMarkup()
+            m.add(types.InlineKeyboardButton("❌ Отмена", callback_data="cancel_lobby"))
+            msg = bot.send_message(chat_id, f"✅ *Лобби `{lid}` готово!*\nЖдём игроков...", parse_mode="Markdown", reply_markup=m)
             track_msg(lid, msg)
 
     elif data == "join_game":
-        user_states[uid] = 'entering_code'; safe_delete(chat_id, mid)
-        bot.send_message(chat_id, "🔑 Введи 6-значный код лобби:")
+        user_states[uid] = 'entering_code'
+        safe_delete(chat_id, mid)
+        bot.send_message(chat_id, "🔑 Введи код лобби:")
 
     elif data == "show_card":
         lid = get_real_lobby(uid)
         if not lid: return
-        pd = lobbies[lid]['data'].get(uid); safe_delete(chat_id, mid)
-        txt = "🕵️ *ТЫ ШПИОН!*" if pd['is_spy'] else f"✅ *Ты мирный*\n\n📂 Тема: {pd['theme_name']}\n🎯 Загадано: *{pd['card_name']}*"
-        m = types.InlineKeyboardMarkup(); m.add(types.InlineKeyboardButton("🔒 Скрыть", callback_data="hide_card"))
-        msg = bot.send_message(chat_id, txt, parse_mode="Markdown", reply_markup=m); track_msg(lid, msg)
+        pd = lobbies[lid]['data'].get(uid)
+        safe_delete(chat_id, mid)
+        txt = "🕵️ *ТЫ ШПИОН!*" if pd['is_spy'] else f"✅ *Мирный*\n\n📂 Тема: {pd['theme_name']}\n🎯 Загадано: *{pd['card_name']}*"
+        m = types.InlineKeyboardMarkup()
+        m.add(types.InlineKeyboardButton("🔒 Скрыть", callback_data="hide_card"))
+        msg = bot.send_message(chat_id, txt, parse_mode="Markdown", reply_markup=m)
+        track_msg(lid, msg)
 
     elif data == "hide_card":
-        safe_delete(chat_id, mid); lid = get_real_lobby(uid)
-        m = types.InlineKeyboardMarkup(); m.add(types.InlineKeyboardButton("👁️ Показать", callback_data="show_card"))
+        safe_delete(chat_id, mid)
+        lid = get_real_lobby(uid)
+        m = types.InlineKeyboardMarkup()
+        m.add(types.InlineKeyboardButton("👁️ Показать", callback_data="show_card"))
         msg = bot.send_message(chat_id, "🔒 Скрыто.", reply_markup=m)
         if lid: track_msg(lid, msg)
 
     elif data == "restart_game":
         lid = get_real_lobby(uid)
-        if lid and lobbies[lid]['host_id'] == uid: clear_lobby_messages(lid); start_distribution(lid)
+        if lid and lobbies[lid]['host_id'] == uid:
+            clear_lobby_messages(lid)
+            start_distribution(lid)
 
     elif data == "main_menu" or data == "cancel_lobby":
-        lid = get_real_lobby(uid); if lid: dissolve_lobby(lid)
-        safe_delete(chat_id, mid); bot.send_message(chat_id, "🎭 *Чудо Оолаха*", parse_mode="Markdown", reply_markup=kb_main())
+        lid = get_real_lobby(uid)
+        if lid:
+            dissolve_lobby(lid)
+        safe_delete(chat_id, mid)
+        bot.send_message(chat_id, "🎭 *Чудо Оолаха*", parse_mode="Markdown", reply_markup=kb_main())
 
-    # --- ОФФЛАЙН РЕЖИМ ---
     elif data == "offline_mode":
         offline_games[uid] = {'players': 3, 'spies': 1, 'theme': THEME_KEYS[0], 'cur': 0}
         safe_delete(chat_id, mid)
@@ -278,46 +307,60 @@ def handle_cb(call):
         bot.send_message(chat_id, "📱 *Оффлайн*\nСколько игроков?", parse_mode="Markdown", reply_markup=m)
 
     elif data.startswith("off_p_"):
-        offline_games[uid]['players'] = int(data.split("_")[2]); safe_delete(chat_id, mid)
+        offline_games[uid]['players'] = int(data.split("_")[2])
+        safe_delete(chat_id, mid)
         m = types.InlineKeyboardMarkup()
         for i, t in enumerate(THEME_KEYS): m.add(types.InlineKeyboardButton(t, callback_data=f"off_t_{i}"))
-        bot.send_message(chat_id, "Выбери тему:", reply_markup=m)
+        bot.send_message(chat_id, "Тема:", reply_markup=m)
 
     elif data.startswith("off_t_"):
-        og = offline_games[uid]; og['theme'] = THEME_KEYS[int(data.split("_")[2])]
+        og = offline_games[uid]
+        og['theme'] = THEME_KEYS[int(data.split("_")[2])]
         word = random.choice(THEMES[og['theme']])
         spy_idx = random.sample(range(og['players']), og['spies'])
         og['roles'] = [{'is_spy': i in spy_idx, 'word': word} for i in range(og['players'])]
         off_show_turn(uid, chat_id, mid)
 
     elif data == "off_show":
-        og = offline_games[uid]; role = og['roles'][og['cur']]; safe_delete(chat_id, mid)
+        og = offline_games[uid]
+        role = og['roles'][og['cur']]
+        safe_delete(chat_id, mid)
         txt = "🕵️ *ШПИОН!*" if role['is_spy'] else f"✅ *Мирный*\n\nЗагадано: *{role['word']}*"
-        m = types.InlineKeyboardMarkup(); m.add(types.InlineKeyboardButton("🔒 Скрыть", callback_data="off_next"))
+        m = types.InlineKeyboardMarkup()
+        m.add(types.InlineKeyboardButton("🔒 Скрыть", callback_data="off_next"))
         bot.send_message(chat_id, txt, parse_mode="Markdown", reply_markup=m)
 
     elif data == "off_next":
-        offline_games[uid]['cur'] += 1; off_show_turn(uid, chat_id, mid)
+        offline_games[uid]['cur'] += 1
+        off_show_turn(uid, chat_id, mid)
 
 def off_show_turn(uid, chat_id, mid):
-    og = offline_games[uid]; safe_delete(chat_id, mid)
+    og = offline_games[uid]
+    safe_delete(chat_id, mid)
     if og['cur'] < og['players']:
-        m = types.InlineKeyboardMarkup(); m.add(types.InlineKeyboardButton(f"👁️ Игрок {og['cur']+1}", callback_data="off_show"))
-        bot.send_message(chat_id, f"📱 Передай телефон Игроку {og['cur']+1}", reply_markup=m)
+        m = types.InlineKeyboardMarkup()
+        m.add(types.InlineKeyboardButton(f"👁️ Игрок {og['cur']+1}", callback_data="off_show"))
+        bot.send_message(chat_id, f"📱 Передай Игроку {og['cur']+1}", reply_markup=m)
     else:
-        m = types.InlineKeyboardMarkup(); m.add(types.InlineKeyboardButton("🏠 В меню", callback_data="go_main"))
-        bot.send_message(chat_id, "✅ Все посмотрели роли! Начинайте игру.", reply_markup=m)
+        m = types.InlineKeyboardMarkup()
+        m.add(types.InlineKeyboardButton("🏠 Меню", callback_data="go_main"))
+        bot.send_message(chat_id, "✅ Начинайте обсуждение!", reply_markup=m)
 
 def start_distribution(lobby_id):
-    lobby = lobbies[lobby_id]; lobby['started'] = True
+    lobby = lobbies[lobby_id]
+    lobby['started'] = True
     player_ids = list(lobby['players'].keys())
     spies = set(random.sample(player_ids, lobby['settings']['spies_count']))
-    theme = lobby['settings']['theme']; word = random.choice(THEMES[theme])
+    theme = lobby['settings']['theme']
+    word = random.choice(THEMES[theme])
     for p_id in player_ids:
         lobby['data'][p_id] = {'is_spy': p_id in spies, 'card_name': word, 'theme_name': theme}
-        m = types.InlineKeyboardMarkup(); m.add(types.InlineKeyboardButton("👁️ Показать роль", callback_data="show_card"))
-        msg = bot.send_message(p_id, "🎮 *Раунд начался!*", parse_mode="Markdown", reply_markup=m); track_msg(lobby_id, msg)
-        msg2 = bot.send_message(p_id, "⬇️ Управление раундом:", reply_markup=kb_game_controls()); track_msg(lobby_id, msg2)
+        m = types.InlineKeyboardMarkup()
+        m.add(types.InlineKeyboardButton("👁️ Роль", callback_data="show_card"))
+        msg = bot.send_message(p_id, "🎮 *Раунд начался!*", parse_mode="Markdown", reply_markup=m)
+        track_msg(lobby_id, msg)
+        msg2 = bot.send_message(p_id, "⬇️ Меню:", reply_markup=kb_game_controls())
+        track_msg(lobby_id, msg2)
 
 if __name__ == '__main__':
     try:
